@@ -1,10 +1,11 @@
 import streamlit as st
+import pandas as pd
+import numpy as np
+import torch
 from transformers import AutoTokenizer, AutoModelForMaskedLM
-from langchain import LangChain
 from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
-import numpy as np
 
 # Initialize the tokenizer and model
 tokenizer = AutoTokenizer.from_pretrained("distilbert/distilbert-base-uncased")
@@ -18,31 +19,28 @@ def embed_text(texts):
     embeddings = outputs.last_hidden_state.mean(dim=1).numpy()
     return embeddings
 
-# Set up the LangChain vector store
+# Load and process the dataset
+def load_and_process_data(file_path):
+    df = pd.read_csv(file_path)
+    texts = df['question'].tolist()
+    answers = df['answer'].tolist()
+    return texts, answers
+
+# Create the vector database from the dataset
 def create_vector_db():
-    # Load your dataset
-    dataset = [
-        {"text": "What is your return policy?", "answer": "You can return items within 30 days."},
-        {"text": "How do I track my order?", "answer": "You can track your order using the tracking link in your email."}
-        # Add more examples as needed
-    ]
-    
-    texts = [item["text"] for item in dataset]
-    answers = [item["answer"] for item in dataset]
+    file_path = "dataset.csv"  # Path to your dataset.csv
+    texts, answers = load_and_process_data(file_path)
     
     embeddings = embed_text(texts)
     vectorstore = FAISS(embeddings=embeddings, documents=texts)
     vectorstore.save_local("faiss_index")
+    st.success("Knowledgebase created successfully!")
 
 # Define the LangChain QA Chain
 def get_qa_chain():
-    # Load the vector store
     vectorstore = FAISS.load_local("faiss_index")
-    
-    # Set up the retriever
     retriever = vectorstore.as_retriever()
     
-    # Define the prompt template
     prompt_template = """Given the following context and a question, generate an answer based on this context only.
     If the answer is not found in the context, kindly state "I don't know." Don't try to make up an answer.
     
@@ -50,7 +48,7 @@ def get_qa_chain():
     QUESTION: {question}"""
 
     chain = RetrievalQA.from_chain_type(
-        llm=None,  # No LLM here; we are using a simple retriever
+        llm=None,
         chain_type="stuff",
         retriever=retriever,
         return_source_documents=True,
@@ -62,9 +60,9 @@ def get_qa_chain():
 # Streamlit UI
 st.title("Customer Service Chatbot 💬🤖")
 
+# Create the knowledgebase (run this once or on demand)
 if st.button("Create Knowledgebase"):
     create_vector_db()
-    st.success("Knowledgebase created successfully!")
 
 question = st.text_input("Ask your question:")
 if question:
