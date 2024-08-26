@@ -9,3 +9,4 @@ transformers==4.29.2
 sentence-transformers==2.2.2
 tokenizers==0.13.3
 datasets==2.13.1
+rust
