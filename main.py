@@ -8,7 +8,10 @@ from transformers import AutoTokenizer, AutoModelForMaskedLM, pipeline
 
 # Load and process the dataset
 def load_and_process_data(file_path):
-    df = pd.read_csv(file_path)
+    try:
+        df = pd.read_csv(file_path, encoding='utf-8')  # Default to UTF-8 encoding
+    except UnicodeDecodeError:
+        df = pd.read_csv(file_path, encoding='ISO-8859-1')  # Try an alternative encoding
     prompts = df['prompt'].tolist()
     answers = df['answer'].tolist()
     return prompts, answers
