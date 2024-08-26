@@ -1,6 +1,8 @@
 import streamlit as st
 from langchain_helper import get_qa_chain, create_vector_db
 
+api_key = st.text_input("Enter Google API Key (optional)", type="password")
+
 st.title("CUSTOMER SERVICE CHATBOT 💬🤖")
 
 if st.button("Create Knowledgebase"):
