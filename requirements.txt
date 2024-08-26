@@ -5,3 +5,4 @@ tiktoken
 faiss-cpu
 protobuf~=3.19.0
 sentence-transformers==2.2.2
+google-generativeai
