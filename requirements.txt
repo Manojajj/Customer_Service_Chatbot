@@ -6,3 +6,5 @@ faiss-cpu
 protobuf~=3.19.0
 sentence-transformers
 google-generativeai
+torch
+transformers
