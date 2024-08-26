@@ -17,7 +17,7 @@ vectordb_file_path = "faiss_index"
 
 def create_vector_db():
     # Load the dataset and create vector database
-    loader = CSVLoader(file_path="dataset/dataset.csv", source_column="prompt")
+    loader = CSVLoader(file_path="dataset.csv", source_column="prompt")
     data = loader.load()
     vectordb = FAISS.from_documents(data, embedding_model)
     vectordb.save_local(vectordb_file_path)
