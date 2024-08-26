@@ -1,4 +1,5 @@
 langchain
+langchain-embeddings
 langchain-community
 python-dotenv
 streamlit
