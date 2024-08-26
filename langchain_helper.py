@@ -1,4 +1,5 @@
 import streamlit as st
+import main
 from langchain.vectorstores import FAISS
 from langchain.llms import GooglePalm
 from langchain.document_loaders.csv_loader import CSVLoader
@@ -10,13 +11,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Get the API key from Streamlit's text input
-api_key = st.text_input("Enter Google API Key (optional)", type="password")
-
 llm = None
 if api_key:
     try:
-        llm = GooglePalm(google_api_key=api_key, temperature=0.1)
+        llm = GooglePalm(google_api_key=main.api_key, temperature=0.1)
     except ImportError as e:
         st.error(f"Failed to initialize GooglePalm: {e}")
 else:
