@@ -7,3 +7,5 @@ protobuf~=3.19.0
 sentence-transformers==2.2.2
 google-generativeai
 instructor-embeddings
+torch
+transformers
