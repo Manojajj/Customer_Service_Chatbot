@@ -2,3 +2,4 @@ streamlit==1.19.0
 langchain==0.0.118
 transformers==4.30.0
 faiss-cpu==1.7.3
+tokenizers==0.13.3
