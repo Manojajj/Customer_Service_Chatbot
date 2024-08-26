@@ -28,10 +28,7 @@ else:
     st.warning("Google API Key is not provided. The application may not function as expected.")
 
 # Define the embeddings
-try:
-    instructor_embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-large")
-except ImportError as e:
-    st.error(f"Failed to initialize embeddings: {e}")
+instructor_embeddings = HuggingFaceEmbeddings(model_name="hkunlp/instructor-large")
 
 vectordb_file_path = "faiss_index"
 
