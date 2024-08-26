@@ -1,6 +1,7 @@
 streamlit
 transformers
 langchain
+langchain-community
 faiss-cpu
 numpy
 torch
