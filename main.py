@@ -1,78 +1,58 @@
-import streamlit as st
 import pandas as pd
-import numpy as np
-import torch
-from transformers import AutoTokenizer, AutoModelForMaskedLM
-from langchain.chains import RetrievalQA
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
+from langchain.chains.question_answering import load_qa_chain
+from langchain.llms import HuggingFacePipeline
+import streamlit as st
+from transformers import AutoTokenizer, AutoModelForMaskedLM, pipeline
 
-# Initialize the tokenizer and model
-tokenizer = AutoTokenizer.from_pretrained("distilbert/distilbert-base-uncased")
-model = AutoModelForMaskedLM.from_pretrained("distilbert/distilbert-base-uncased")
-
-# Define the text embedding function
-def embed_text(texts):
-    inputs = tokenizer(texts, return_tensors="pt", padding=True, truncation=True)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    embeddings = outputs.last_hidden_state.mean(dim=1).numpy()
-    return embeddings
-
-# Load and process the dataset with specified encoding
+# Load and process the dataset
 def load_and_process_data(file_path):
-    try:
-        df = pd.read_csv(file_path, encoding='utf-8')  # Try 'utf-8' first
-    except UnicodeDecodeError:
-        df = pd.read_csv(file_path, encoding='latin1')  # Fallback to 'latin1' if 'utf-8' fails
-    texts = df['question'].tolist()
+    df = pd.read_csv(file_path)
+    prompts = df['prompt'].tolist()
     answers = df['answer'].tolist()
-    return texts, answers
+    return prompts, answers
 
-# Create the vector database from the dataset
-def create_vector_db():
-    file_path = "dataset.csv"  # Path to your dataset.csv
-    texts, answers = load_and_process_data(file_path)
+# Create the vector database
+def create_vector_db(prompts, answers):
+    embeddings = HuggingFaceEmbeddings(model_name="distilbert-base-uncased")
+    vector_store = FAISS.from_texts(prompts, embeddings)
+    return vector_store, answers
+
+# Load the model
+def load_model():
+    tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+    model = AutoModelForMaskedLM.from_pretrained("distilbert-base-uncased")
+    nlp_pipeline = pipeline("fill-mask", model=model, tokenizer=tokenizer)
+    llm = HuggingFacePipeline(pipeline=nlp_pipeline)
+    return llm
+
+# Main function to run the app
+def main():
+    st.title("Customer Service Chatbot")
     
-    embeddings = embed_text(texts)
-    vectorstore = FAISS(embeddings=embeddings, documents=texts)
-    vectorstore.save_local("faiss_index")
-    st.success("Knowledgebase created successfully!")
-
-# Define the LangChain QA Chain
-def get_qa_chain():
-    vectorstore = FAISS.load_local("faiss_index")
-    retriever = vectorstore.as_retriever()
+    # Load the dataset
+    prompts, answers = load_and_process_data("dataset.csv")
     
-    prompt_template = """Given the following context and a question, generate an answer based on this context only.
-    If the answer is not found in the context, kindly state "I don't know." Don't try to make up an answer.
+    # Create the vector database
+    vector_store, answers = create_vector_db(prompts, answers)
     
-    CONTEXT: {context}
-    QUESTION: {question}"""
-
-    chain = RetrievalQA.from_chain_type(
-        llm=None,
-        chain_type="stuff",
-        retriever=retriever,
-        return_source_documents=True,
-        chain_type_kwargs={"prompt": prompt_template}
-    )
+    # Load the model
+    llm = load_model()
     
-    return chain
+    # Get user query
+    user_query = st.text_input("Ask a question:")
+    
+    if user_query:
+        # Perform similarity search
+        docs = vector_store.similarity_search(user_query)
+        if docs:
+            # Get the most relevant answer
+            context = docs[0].page_content
+            response = llm(f"{context} {user_query}")
+            st.write("Answer:", response["text"])
+        else:
+            st.write("No relevant answer found.")
 
-# Streamlit UI
-st.title("Customer Service Chatbot 💬🤖")
-
-# Create the knowledgebase (run this once or on demand)
-if st.button("Create Knowledgebase"):
-    create_vector_db()
-
-question = st.text_input("Ask your question:")
-if question:
-    chain = get_qa_chain()
-    if chain:
-        response = chain(question)
-        st.header("Answer")
-        st.write(response["result"])
-    else:
-        st.error("Unable to generate a response. Please check your inputs.")
+if __name__ == "__main__":
+    main()
