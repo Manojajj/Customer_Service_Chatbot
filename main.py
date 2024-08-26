@@ -19,9 +19,12 @@ def embed_text(texts):
     embeddings = outputs.last_hidden_state.mean(dim=1).numpy()
     return embeddings
 
-# Load and process the dataset
+# Load and process the dataset with specified encoding
 def load_and_process_data(file_path):
-    df = pd.read_csv(file_path)
+    try:
+        df = pd.read_csv(file_path, encoding='utf-8')  # Try 'utf-8' first
+    except UnicodeDecodeError:
+        df = pd.read_csv(file_path, encoding='latin1')  # Fallback to 'latin1' if 'utf-8' fails
     texts = df['question'].tolist()
     answers = df['answer'].tolist()
     return texts, answers
