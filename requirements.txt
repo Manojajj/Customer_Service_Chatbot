@@ -1,8 +1,4 @@
-streamlit
-pandas
-transformers
-torch
-langchain
-langchain-community
-sentence-transformers
-faiss-gpu
+streamlit==1.37.1
+pandas==2.1.0
+transformers==4.33.0
+torch==2.0.1
