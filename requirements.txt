@@ -3,4 +3,3 @@ pandas
 transformers
 torch
 langchain
-sentense-transformers
