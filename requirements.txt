@@ -1,5 +1,6 @@
 streamlit
-langchain
 transformers
+langchain
 faiss-cpu
-tokenizers
+numpy
+torch
