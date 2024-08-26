@@ -3,7 +3,7 @@ python-dotenv==1.0.0
 streamlit==1.22.0
 tiktoken
 faiss-cpu
-protobuf~=3.19.0
+protobuf
 sentence-transformers==2.2.2
 google-generativeai
 instructor-embeddings
